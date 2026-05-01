@@ -14,6 +14,8 @@ class Sidebar(ctk.CTkFrame):
                                        font=ctk.CTkFont("DM Sans 14pt", size=20, weight="bold"))
         self.logo_label.pack(pady=(20, 20), padx=(35, 35), anchor="w")
 
+        self.menu_buttons = {}
+
         menu_items = [("Dashboard", self.dashboard_clicked),
                       ("My tasks", self.my_tasks_clicked),
                       ("Documents", self.documents_clicked)]
@@ -31,17 +33,19 @@ class Sidebar(ctk.CTkFrame):
             for item in menu_items:
                 icon_image = ctk.CTkImage(
                     light_image=Image.open(os.path.join(image_path, f"{item[0].lower()}.png")),
-                    size=(24, 24)  # Adjust size to match your font
+                    size=(16, 16)  # Adjust size to match your font
                 )
 
                 btn = ctk.CTkButton(self, text=item[0], fg_color="transparent",
                                     text_color="#505b62", hover_color="#dee4e9", anchor="w",
-                                    font=ctk.CTkFont("DM Sans 14pt Medium", size=14),
                                     corner_radius=10, height=40,
                                     image=icon_image, compound="left",  # Icon next to text
                                     command=item[1],
                                     )
                 btn.pack(fill="x", padx=20, pady=5)
+
+                self.menu_buttons[item[0]] = btn
+
         except Exception as e:
             print(e)
 
@@ -53,3 +57,24 @@ class Sidebar(ctk.CTkFrame):
 
     def documents_clicked(self):
         print("Documents clicked")
+
+    def handle_click(self, button_name, command_func):
+        """Update visuals and then run the original command."""
+        self.select_button(button_name)
+        command_func()
+
+    def select_button(self, name):
+        """Highlights the chosen button and resets others."""
+        for btn_name, btn_obj in self.menu_buttons.items():
+            if btn_name == name:
+                btn_obj.configure(fg_color="#ffffff", text_color="#212124",
+                                  border_width = 2,  # Defines the thickness
+                                  border_color = "#e7e9eb",
+                                  font=ctk.CTkFont("DM Sans 14pt Semibold", size=12, weight="bold")
+                                  )  # Active color
+
+            else:
+                btn_obj.configure(fg_color="transparent", text_color="#4c515f",
+                                  border_width=0,
+                                  font=ctk.CTkFont("DM Sans 14pt Medium", size=12, weight="bold")
+                                  )  # Normal color
