@@ -23,25 +23,27 @@ class MyTaskPage(ctk.CTkFrame):
         self.table_header.pack(fill="x", padx=10, pady=(10, 0))
 
         # Grid weights: Project(1), Title(1), Description(2), Due(1) + Scrollbar space
-        self.table_header.grid_columnconfigure((0, 1, 3), weight=1)
-        self.table_header.grid_columnconfigure(2, weight=2)
-        self.table_header.grid_columnconfigure(4, minsize=20)  # Scrollbar offset
+        self.table_header.grid_columnconfigure(0, weight=0, minsize=50)  # Fixed Checkbox width
+        self.table_header.grid_columnconfigure((1, 2, 4), weight=1)  # Equal widths
+        self.table_header.grid_columnconfigure(3, weight=2)  # Double width for Desc
+        self.table_header.grid_columnconfigure(5, minsize=20)  # Scrollbar buffer
 
-        headers = ["Project", "Title", "Description", "Due"]
+        headers = ["", "Project", "Title", "Description", "Due"]
         for i, h in enumerate(headers):
-            # Align Project, Title, Desc to West(w), Due to East(e)
-            sticky = "w" if i < 3 else "e"
+            # Align everything left except Due (index 4)
+            anchor = "w" if i < 4 else "e"
             ctk.CTkLabel(self.table_header, text=h,
                          font=ctk.CTkFont("DM Sans 14pt", 14, "bold"),
-                         text_color="#636e72").grid(row=0, column=i, sticky=sticky, padx=20)
+                         text_color="#636e72", justify="left").grid(row=0, column=i, sticky=anchor, padx=20)
 
-        # 4. Scrollable Table Body
+        # --- 4. Scrollable Table Body (Matching Configuration) ---
         self.scroll_frame = ctk.CTkScrollableFrame(self.table_container, fg_color="transparent")
         self.scroll_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
-        # Match weights exactly
-        self.scroll_frame.grid_columnconfigure((0, 1, 3), weight=1)
-        self.scroll_frame.grid_columnconfigure(2, weight=2)
+        # MUST match the header weights exactly
+        self.scroll_frame.grid_columnconfigure(0, weight=0, minsize=60)
+        self.scroll_frame.grid_columnconfigure((1, 2, 4), weight=1)
+        self.scroll_frame.grid_columnconfigure(3, weight=2)
 
         # Initial Render
         self.render_all_tasks()
@@ -58,23 +60,37 @@ class MyTaskPage(ctk.CTkFrame):
         for project in self.manager.data:
             project_name = project.get_name()
             tasks = project.get_tasks()
-            print(tasks)
 
             for task in tasks:
+                is_done = task[3]
+                check_var = ctk.BooleanVar(value=is_done)
+
+                checkbox = ctk.CTkCheckBox(
+                    self.scroll_frame,
+                    text="",
+                    width=20,
+                    variable=check_var,
+                    command=lambda n=project_name, t=task[0]:
+                            self.manager.update_task_status(n,t)
+                )
+
+                # print(project_name, task[0], check_var.get())
+                checkbox.grid(row=row_idx, column=0, sticky="nw", padx=(20, 0), pady=10)
+
                 # Column 0: Project Name
                 ctk.CTkLabel(self.scroll_frame, text=project_name, font=("DM Sans 14pt", 14, "bold")).grid(
-                    row=row_idx, column=0, sticky="nw", padx=20, pady=10)
+                    row=row_idx, column=1, sticky="nw", padx=20, pady=10)
 
                 # Column 1: Task Title
                 ctk.CTkLabel(self.scroll_frame, text=task[0], font=("DM Sans 14pt", 14, "bold")).grid(
-                    row=row_idx, column=1, sticky="nw", padx=20, pady=10)
+                    row=row_idx, column=2, sticky="nw", padx=20, pady=10)
 
                 # Column 2: Description (with wrapping)
                 ctk.CTkLabel(self.scroll_frame, text=task[1], wraplength=350, justify="left",
-                             font=("DM Sans 14pt", 14)).grid(row=row_idx, column=2, sticky="nw", padx=20, pady=10)
+                             font=("DM Sans 14pt", 14)).grid(row=row_idx, column=3, sticky="nw", padx=20, pady=10)
 
                 # Column 3: Due Date
                 ctk.CTkLabel(self.scroll_frame, text=task[2], font=("DM Sans 14pt", 14)).grid(
-                    row=row_idx, column=3, sticky="ne", padx=20, pady=10)
+                    row=row_idx, column=4, sticky="ne", padx=20, pady=10)
 
                 row_idx += 1

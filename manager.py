@@ -17,6 +17,13 @@ class TaskData(Data):
     def __init__(self, title, description=None, due_date=None):
         super().__init__(title, description)
         self.data["due_date"] = due_date
+        self.is_done = False
+
+    def check_done(self):
+        self.is_done = True
+
+    def check_not_done(self):
+        self.is_done = False
 
 class ProjectData(Data):
     def __init__(self, title, description=None):
@@ -73,6 +80,14 @@ class Manager:
 
         return tasks
 
+    def get_task_from_name(self, project_name):
+        for project in self.data:
+            if project.get_name() == project_name:
+
+                return project.get_tasks()
+
+        return None
+
     def cal_project(self):
         return len(self.data)
 
@@ -115,7 +130,7 @@ class Manager:
     def create_task(self, project_name, title, description, due_date):
         for project in self.data:
             if project.get_name() == project_name:
-                self.save_file(project_name, description, tasks=[title, description, due_date])
+                self.save_file(project_name, description, tasks=[title, description, due_date, False])
 
     def is_valid_date(self, date_string):
         try:
@@ -124,6 +139,32 @@ class Manager:
             return True
         except ValueError:
             return False
+
+    def update_task_status(self, project_name, task_title):
+        """Finds the task by its title string and updates its status."""
+        file_name = project_name.replace(" ", "_") + ".json"
+        file_path = os.path.join(self.data_path, file_name)
+
+        for project in self.data:
+            # print(project, project.get_name(), project.get_name()==project_name)
+            if project.get_name() == project_name:
+                tasks = project.get_tasks()
+
+                # Search for the task by name (index 0 is the title)
+                for task in tasks:
+                    if task[0] == task_title:
+                        task[3] = not task[3]  # Update the boolean (index 3)
+                        break
+
+                # Save the updated project data back to the database
+                try:
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        json.dump(project.get_data(), f, indent=4, sort_keys=True)
+                except Exception as e:
+                    print(f"Error saving task status: {e}")
+                break
+
+        self.get_data()
 
     def __str__(self):
         return str(self.data_path) + " " +  str(self.data)
