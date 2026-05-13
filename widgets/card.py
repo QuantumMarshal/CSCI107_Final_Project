@@ -9,7 +9,7 @@ class CustomCard(ctk.CTkFrame):
         # Configure grid for the card
         self.grid_columnconfigure(0, weight=1)
 
-        # 1. Top Section: Title and Arrow Button
+        # Top Section: Title and Arrow Button
         self.title_label = ctk.CTkLabel(
             self, text=title,
             font=ctk.CTkFont("DM Sans 14pt Medium", size=14,),

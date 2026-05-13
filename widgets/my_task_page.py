@@ -1,16 +1,33 @@
+"""
+Project Management System - My Tasks Page
+
+This module defines the MyTaskPage class, which provides a global overview
+of all tasks across all existing projects. It serves as a master list for
+tracking deadlines and completion status.
+
+"""
+
 import customtkinter as ctk
 
 
 class MyTaskPage(ctk.CTkFrame):
+    """
+    A task list view that have all tasks from all projects.
+
+    This page allows the user to see everything on their plate at once,
+    maintaining strict grid alignment about task descriptions and due dates.
+    """
     def __init__(self, parent, manager, refresh_callback, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.manager = manager
         self.refresh_callback = refresh_callback
+
+        # Ensure the frame blends with the MainApplication background
         self.configure(fg_color="transparent")
 
         # 1. Page Header
         self.label = ctk.CTkLabel(self, text="Task Manager",
-                                  font=ctk.CTkFont("DM Sans", size=20, weight="bold"))
+                                  font=ctk.CTkFont("DM Sans 14pt", size=20, weight="bold"))
         self.label.pack(pady=(20, 10), anchor="w", padx=30)
 
         # 2. Table Container (The white box with border)
@@ -30,13 +47,14 @@ class MyTaskPage(ctk.CTkFrame):
 
         headers = ["", "Project", "Title", "Description", "Due"]
         for i, h in enumerate(headers):
-            # Align everything left except Due (index 4)
-            anchor = "w" if i < 4 else "e"
+            # Alignment logic: Titles and text are left-aligned; Due date is right-aligned
+            sticky = "w"
+            if i > 4: sticky = "e"
             ctk.CTkLabel(self.table_header, text=h,
                          font=ctk.CTkFont("DM Sans 14pt", 14, "bold"),
-                         text_color="#636e72", justify="left").grid(row=0, column=i, sticky=anchor, padx=20)
+                         text_color="#636e72", justify="left").grid(row=0, column=i, sticky=sticky, padx=20)
 
-        # --- 4. Scrollable Table Body (Matching Configuration) ---
+        # 4. Scrollable Table Body
         self.scroll_frame = ctk.CTkScrollableFrame(self.table_container, fg_color="transparent")
         self.scroll_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
@@ -49,22 +67,27 @@ class MyTaskPage(ctk.CTkFrame):
         self.render_all_tasks()
 
     def render_all_tasks(self):
-        # Clear existing
+        """Clears the current view and iterates through all projects to list every task."""
+
+        # 1. Clear existing task widgets from the scroll frame
         for widget in self.scroll_frame.winfo_children():
             widget.destroy()
 
+        # 2. Sync with the data manager
         self.manager.get_data()
         row_idx = 0
 
-        # Loop through every project in your manager
+        # 3. Nested loop: Iterate Projects -> Iterate Tasks within Projects
         for project in self.manager.data:
             project_name = project.get_name()
             tasks = project.get_tasks()
 
             for task in tasks:
+                # task structure: [Title, Desc, Due, is_done]
                 is_done = task[3]
                 check_var = ctk.BooleanVar(value=is_done)
 
+                # Column 0: Checkbox
                 checkbox = ctk.CTkCheckBox(
                     self.scroll_frame,
                     text="",
@@ -73,23 +96,21 @@ class MyTaskPage(ctk.CTkFrame):
                     command=lambda n=project_name, t=task[0]:
                             self.manager.update_task_status(n,t)
                 )
-
-                # print(project_name, task[0], check_var.get())
                 checkbox.grid(row=row_idx, column=0, sticky="nw", padx=(20, 0), pady=10)
 
-                # Column 0: Project Name
+                # Column 1: Project Name
                 ctk.CTkLabel(self.scroll_frame, text=project_name, font=("DM Sans 14pt", 14, "bold")).grid(
                     row=row_idx, column=1, sticky="nw", padx=20, pady=10)
 
-                # Column 1: Task Title
+                # Column 2: Task Title
                 ctk.CTkLabel(self.scroll_frame, text=task[0], font=("DM Sans 14pt", 14, "bold")).grid(
                     row=row_idx, column=2, sticky="nw", padx=20, pady=10)
 
-                # Column 2: Description (with wrapping)
+                # Column 3: Description
                 ctk.CTkLabel(self.scroll_frame, text=task[1], wraplength=350, justify="left",
                              font=("DM Sans 14pt", 14)).grid(row=row_idx, column=3, sticky="nw", padx=20, pady=10)
 
-                # Column 3: Due Date
+                # Column 4: Due Date
                 ctk.CTkLabel(self.scroll_frame, text=task[2], font=("DM Sans 14pt", 14)).grid(
                     row=row_idx, column=4, sticky="ne", padx=20, pady=10)
 
