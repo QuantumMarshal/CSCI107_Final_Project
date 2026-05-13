@@ -170,6 +170,21 @@ class DashboardPage(ctk.CTkFrame):
             )
             project_btn.pack(fill="x", padx=10, pady=5)
 
+        # 4. Render Upcoming Task Names
+        upcoming_tasks = self.manager.get_upcoming_tasks(days=7)
+
+        if not upcoming_tasks:
+            no_task_label = ctk.CTkLabel(self.tasks_panel, text="No tasks due soon",
+                                         font=("DM Sans 14pt", 14), text_color="#636e72",
+                                         wraplength=200)
+            no_task_label.pack(pady=10)
+        else:
+            for task_name in upcoming_tasks:
+                task_label = ctk.CTkLabel(self.tasks_panel, text=f"• {task_name}",
+                                          font=("DM Sans 14pt", 14), anchor="w", justify="left",
+                                          wraplength=200)
+                task_label.pack(fill="x", padx=20, pady=2)
+
         # Update card values (running logic currently mirrors total projects)
         self.card_value = [self.manager.cal_project(), 0, self.manager.cal_project(), 0]
 

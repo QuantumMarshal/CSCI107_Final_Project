@@ -222,6 +222,27 @@ class Manager:
         # Get a new data
         self.get_data()
 
+    def get_upcoming_tasks(self, days=7):
+        """Returns a list of task names due within the specified number of days."""
+        upcoming_task_names = []
+        today = datetime.now()
+
+        for project in self.data:
+            for task in project.get_tasks():
+                # Task structure: [Title, Description, Due Date, Is Done]
+                due_date_str = task[2]
+                is_done = task[3]
+
+                if not is_done and self.is_valid_date(due_date_str):
+                    due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
+                    delta = due_date - today
+
+                    # Check if the date is in the future and within the 7-day window
+                    if 0 <= delta.days <= days:
+                        upcoming_task_names.append(task[0])
+
+        return upcoming_task_names
+
     def __str__(self):
         return str(self.data_path) + " " +  str(self.data)
 
