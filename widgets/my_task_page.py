@@ -25,10 +25,40 @@ class MyTaskPage(ctk.CTkFrame):
         # Ensure the frame blends with the MainApplication background
         self.configure(fg_color="transparent")
 
-        # 1. Page Header
-        self.label = ctk.CTkLabel(self, text="Task Manager",
-                                  font=ctk.CTkFont("DM Sans 14pt", size=20, weight="bold"))
-        self.label.pack(pady=(20, 10), anchor="w", padx=30)
+        self.sort_var = ctk.StringVar(value="Default")
+
+        # # 1. Page Header
+        # self.label = ctk.CTkLabel(self, text="Task Manager",
+        #                           font=ctk.CTkFont("DM Sans 14pt", size=20, weight="bold"))
+        # self.label.pack(pady=(20, 10), anchor="w", padx=30)
+
+        # 1. Page Header & Sort Controls
+        self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.header_frame.pack(fill="x", padx=30, pady=(20, 10))
+
+        self.label = ctk.CTkLabel(self.header_frame, text="Task Manager",
+                                  font=ctk.CTkFont("DM Sans", size=20, weight="bold"))
+        self.label.pack(side="left")
+
+        # --- 2. Design-Matched Sort Menu (Matching image_71b703.png) ---
+        self.sort_menu = ctk.CTkSegmentedButton(
+            self.header_frame,
+            values=["Default", "Date"],
+            command=lambda v: self.render_all_tasks(),
+            variable=self.sort_var,
+            font=ctk.CTkFont("DM Sans 14pt", size=12, weight="bold"),  # Slightly larger text
+            fg_color="#e5e7eb",
+            selected_color="#ffffff",
+            selected_hover_color="#ffffff",
+            unselected_color="#e5e7eb",
+            unselected_hover_color="#dadddf",
+            text_color="#000000",
+            border_width=4,
+            corner_radius=12,
+            height=40
+        )
+        self.sort_menu.pack(side="right")
+
 
         # 2. Table Container (The white box with border)
         self.table_container = ctk.CTkFrame(self, fg_color="#ffffff", border_width=1,
@@ -78,40 +108,54 @@ class MyTaskPage(ctk.CTkFrame):
         row_idx = 0
 
         # 3. Nested loop: Iterate Projects -> Iterate Tasks within Projects
+        all_tasks = []
         for project in self.manager.data:
             project_name = project.get_name()
             tasks = project.get_tasks()
 
             for task in tasks:
-                # task structure: [Title, Desc, Due, is_done]
-                is_done = task[3]
-                check_var = ctk.BooleanVar(value=is_done)
+                # Task structure: [Title, Desc, Due, is_done]
+                all_tasks.append({
+                    "project_name": project_name,
+                    "task_data": task
+                })
 
-                # Column 0: Checkbox
-                checkbox = ctk.CTkCheckBox(
-                    self.scroll_frame,
-                    text="",
-                    width=20,
-                    variable=check_var,
-                    command=lambda n=project_name, t=task[0]:
-                            self.manager.update_task_status(n,t)
-                )
-                checkbox.grid(row=row_idx, column=0, sticky="nw", padx=(20, 0), pady=10)
+        selection = self.sort_var.get()
 
-                # Column 1: Project Name
-                ctk.CTkLabel(self.scroll_frame, text=project_name, font=("DM Sans 14pt", 14, "bold")).grid(
-                    row=row_idx, column=1, sticky="nw", padx=20, pady=10)
+        if selection == "Date":
+            # Sort by date string; invalid dates go to bottom
+            all_tasks.sort(key = lambda x: x["task_data"][2])
 
-                # Column 2: Task Title
-                ctk.CTkLabel(self.scroll_frame, text=task[0], font=("DM Sans 14pt", 14, "bold")).grid(
-                    row=row_idx, column=2, sticky="nw", padx=20, pady=10)
+        for row_idx, item in enumerate(all_tasks):
+            project_name = item["project_name"]
+            task = item["task_data"]
+            is_done = task[3]
+            check_var = ctk.BooleanVar(value=is_done)
 
-                # Column 3: Description
-                ctk.CTkLabel(self.scroll_frame, text=task[1], wraplength=350, justify="left",
-                             font=("DM Sans 14pt", 14)).grid(row=row_idx, column=3, sticky="nw", padx=20, pady=10)
+            # Column 0: Checkbox
+            checkbox = ctk.CTkCheckBox(
+                self.scroll_frame,
+                text="",
+                width=20,
+                variable=check_var,
+                command=lambda n=project_name, t=task[0]:
+                        self.manager.update_task_status(n,t)
+            )
+            checkbox.grid(row=row_idx, column=0, sticky="nw", padx=(20, 0), pady=10)
 
-                # Column 4: Due Date
-                ctk.CTkLabel(self.scroll_frame, text=task[2], font=("DM Sans 14pt", 14)).grid(
-                    row=row_idx, column=4, sticky="ne", padx=20, pady=10)
+            # Column 1: Project Name
+            ctk.CTkLabel(self.scroll_frame, text=project_name, font=("DM Sans 14pt", 14, "bold")).grid(
+                row=row_idx, column=1, sticky="nw", padx=20, pady=10)
 
-                row_idx += 1
+            # Column 2: Task Title
+            ctk.CTkLabel(self.scroll_frame, text=task[0], font=("DM Sans 14pt", 14, "bold")).grid(
+                row=row_idx, column=2, sticky="nw", padx=20, pady=10)
+
+            # Column 3: Description
+            ctk.CTkLabel(self.scroll_frame, text=task[1], wraplength=350, justify="left",
+                         font=("DM Sans 14pt", 14)).grid(row=row_idx, column=3, sticky="nw", padx=20, pady=10)
+
+            # Column 4: Due Date
+            ctk.CTkLabel(self.scroll_frame, text=task[2], font=("DM Sans 14pt", 14)).grid(
+                row=row_idx, column=4, sticky="ne", padx=20, pady=10)
+

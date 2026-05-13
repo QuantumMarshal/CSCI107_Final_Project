@@ -243,6 +243,14 @@ class Manager:
 
         return upcoming_task_names
 
+    def get_sort_date(self, task_item):
+        """Helper to extract date for sorting without lambda."""
+        date_val = task_item["task_data"][2]
+        if self.is_valid_date(date_val):
+            return date_val
+        # Fallback for invalid dates to push them to the end
+        return "9999-99-99"
+
     def __str__(self):
         return str(self.data_path) + " " +  str(self.data)
 
